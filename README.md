@@ -1,2 +1,2 @@
 # abq-accordion
-create accordion airfoil structures in ABAQUS
+WIP - create accordion airfoil structures in ABAQUS
