@@ -80,35 +80,25 @@ def airwire(ffX,ffY,xcoord,ycoord,zcoord,chord,twist,datumplane): # creates airf
 		if (ffX[i]>=segLocs[1]):
 			b+=((fX[i]*sign(xcoord),fY[i]*sign(xcoord)),)
 			if iff:
-				lasti2=i
+				lasti1=i
 				iff=0
-			lasti1=i
+			lasti2=i
 	s.Spline(points=b)
 	s.Line(point1=(fX[lasti1]*sign(xcoord),fY[lasti1]*sign(xcoord)), point2=(fX[lasti2]*sign(xcoord),fY[lasti2]*sign(xcoord)))
 	airPart3.Wire(sketchPlane=airPart3.datums[datumplane], sketchUpEdge=uedgec, sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s)
 	del myModel.sketches['__profile__']		
 		
-	airPart2.DatumPlaneByPrincipalPlane(principalPlane=XYPLANE, offset=(-zcoord))
-	fX, fY = rotate(ffX,ffY,chord,-twist)
+	airPart2.DatumPlaneByPrincipalPlane(principalPlane=XYPLANE, offset=(-zcoord)) # conformable section
 	t = airPart2.MakeSketchTransform(sketchPlane=airPart2.datums[datumplane], sketchUpEdge=uedgeb, sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(-xcoord, ycoord, -zcoord))
 	s = myModel.ConstrainedSketch(name='__profile__',sheetSize=200.0, transform=t)
-	b=()
-	b+=((fX[firsti1]*sign(xcoord),fY[firsti1]*sign(xcoord)),)
-	for i in range(0,(len(fX)-1)):
-		if (ffX[i]<=segLocs[1] and ffX[i]>=segLocs[0] and ffY[i]>0):
-			b+=((fX[i]*sign(xcoord),fY[i]*sign(xcoord)),(fX[i+1]*sign(xcoord),fY[i+1]*sign(xcoord)),)
-			if (ffX[i]<=((segLocs[0]+segLocs[1])/2)):
-				midi1=i
-	s.Spline(points=b)
-	b=()
-	b+=((fX[lasti1]*sign(xcoord),fY[lasti1]*sign(xcoord)),)
-	for i in range(0,(len(fX)-1)):
-		if (ffX[i]<=segLocs[1] and ffX[i]>=segLocs[0] and ffY[i]<0):
-			b+=((fX[i]*sign(xcoord),fY[i]*sign(xcoord)),(fX[i+1]*sign(xcoord),fY[i+1]*sign(xcoord)),)
-			if (ffX[i]>=((segLocs[0]+segLocs[1])/2)):
-				midi2=i
-	s.Spline(points=b)
-	
+	s.Line(point1=(fX[firsti1]*sign(xcoord),fY[firsti1]*sign(xcoord)), point2=(fX[firsti2]*sign(xcoord),fY[firsti2]*sign(xcoord)))
+        for i in range(0,lasti1-firsti1):
+            if not i%2:
+                s.Line(point1=(fX[firsti1+i]*sign(xcoord),fY[firsti1+i]*sign(xcoord)), point2=(fX[firsti1+i+1]*sign(xcoord),fY[firsti1+i+1]*sign(xcoord)))
+                s.Line(point1=(fX[firsti1+i+1]*sign(xcoord),fY[firsti1+i+1]*sign(xcoord)), point2=(fX[firsti2-i-1]*sign(xcoord),fY[firsti2-i-1]*sign(xcoord)))
+            else:
+                s.Line(point1=(fX[firsti2-i]*sign(xcoord),fY[firsti2-i]*sign(xcoord)), point2=(fX[firsti2-i-1]*sign(xcoord),fY[firsti2-i-1]*sign(xcoord)))
+                s.Line(point1=(fX[firsti1+i+1]*sign(xcoord),fY[firsti1+i+1]*sign(xcoord)), point2=(fX[firsti2-i-1]*sign(xcoord),fY[firsti2-i-1]*sign(xcoord)))
 	airPart2.Wire(sketchPlane=airPart2.datums[datumplane], sketchUpEdge=uedgeb, sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s)
 	del myModel.sketches['__profile__']
 	return;
@@ -156,8 +146,6 @@ dplane = 2
 for j in range(0, len(bladeX)):
 	airwire(foilX,foilY,bladeX[j],bladeY[j],bladeZ[j],chord[j],twist[j],dplane)
 	dplane = dplane + 2
-	
-	
 for j in range(1, len(bladeX)):
 	oldWire = airPart1.edges.getByBoundingBox(-1e6,-1e6,-bladeZ[j-1]-.00001,1e6,1e6,-bladeZ[j-1]+.00001)
 	newWire = airPart1.edges.getByBoundingBox(-1e6,-1e6,-bladeZ[j]-.00001,1e6,1e6,-bladeZ[j]+.00001)
@@ -170,7 +158,6 @@ for j in range(1, len(bladeX)):
 	oldWire = airPart3.edges.getByBoundingBox(-1e6,-1e6,-bladeZ[j-1]-.00001,1e6,1e6,-bladeZ[j-1]+.00001)
 	newWire = airPart3.edges.getByBoundingBox(-1e6,-1e6,-bladeZ[j]-.00001,1e6,1e6,-bladeZ[j]+.00001)
 	airPart3.ShellLoft(loftsections=(oldWire, newWire), startCondition=NONE, endCondition=NONE)
-
 end=time.time()
 print 'Blade shell has been lofted in ', (end - start), ' seconds.\n'
 
